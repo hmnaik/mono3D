@@ -2,12 +2,14 @@
 
 # The caliration is not really done in this code. 
 
+# The file has 
+
 import cv2
 import numpy as np
 import argparse
 import os
 
-def detect_and_save_frame(video_path, output_video_path):
+def detect_and_save_frame(video_path, output_video_path, jump_factor=30):
     # Open the video file
     cap = cv2.VideoCapture(video_path)
 
@@ -19,7 +21,6 @@ def detect_and_save_frame(video_path, output_video_path):
     frame_number = 0
     totalFrames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
     run_code = True
-    jump_factor = 5
 
     # Arrays to store object points and image points from all images
     obj_points = []  # 3D points in real world space
@@ -46,8 +47,6 @@ def detect_and_save_frame(video_path, output_video_path):
         objp = np.zeros((checkerboard_size[0] * checkerboard_size[1], 3), np.float32)
         objp[:, :2] = np.mgrid[0:checkerboard_size[0], 0:checkerboard_size[1]].T.reshape(-1, 2)
         objp *= square_size_mm
-
-
 
         # Find the chessboard corners
         ret, corners = cv2.findChessboardCorners(gray, checkerboard_size, None)
@@ -97,7 +96,7 @@ def detect_and_save_frame(video_path, output_video_path):
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, gray.shape[::-1], None, None)
 
         #print calib param 
-        print(f"2D:{rvecs} \n 3D:{tvecs}")
+        print(f"Rotation:{rvecs} \n Translation:{tvecs}")
         print(f"Error:{ret} \n K:{mtx}\n Distortion:{dist}")
         
         # Save the calibration results
@@ -117,6 +116,9 @@ def main():
     # Add optional argument for output file
     parser.add_argument('--output', '-o', help='Output file path', default="D:\\Science_projects\\Uganda_Calib\\Calib")
 
+    # Add optional argument for output file
+    parser.add_argument('--jump', '-j', help='Jump factor for the image', type=int, default=5)
+
 
     # Parse command-line arguments
     args = parser.parse_args()
@@ -127,13 +129,15 @@ def main():
             os.path.exists(args.input)
             input_video_path = args.input
             output_video_path = args.output
+            jump_factor = args.jump
+
         except FileNotFoundError:
             print("File not found. Please check the file paths.")
     else:
         print("Please provide both input and output file paths.")
 
     # Call the function to detect and save frames with checkerboard pattern
-    detect_and_save_frame(input_video_path, output_video_path)
+    detect_and_save_frame(input_video_path, output_video_path, jump_factor)
 
 if __name__ == "__main__":
     main()
