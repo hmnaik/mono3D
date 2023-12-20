@@ -1,3 +1,5 @@
+# SFM : Not used at the moment 
+
 import cv2
 import numpy as np
 
