@@ -1,3 +1,9 @@
+# This is useful for selection of the right images for calibration
+
+# The current implementation is to save the images 
+
+# It could be manipulated later to detect the checkerboard and detect the calibration and then allow the user to select or not. 
+
 import cv2
 import os 
 import glob

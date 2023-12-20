@@ -1,3 +1,5 @@
+# The file is just to quickly check if the checked board detection works or not 
+
 import cv2
 import numpy as np
 import os

@@ -1,3 +1,7 @@
+# The script is used to process a video and store the checked board pattenrs as images 
+
+# The caliration is not really done in this code. 
+
 import cv2
 import numpy as np
 import argparse
@@ -46,6 +50,14 @@ def detect_and_save_frame(video_path, output_video_path):
         print(f"Frame number: {frame_number}")
         
         if ret:
+
+            # Store object points 
+            obj_points.append(objp)
+            
+            #Sub-pixel calib processing 
+            corners2 = cv2.cornerSubPix(gray, corners, (11, 11), (-1, -1), criteria=(cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001))
+            img_points.append(corners2)
+
             # Draw corners on the frame
             cv2.drawChessboardCorners(frame, checkerboard_size, corners, ret)
 
@@ -55,12 +67,12 @@ def detect_and_save_frame(video_path, output_video_path):
             cv2.imwrite(output, frame)
             print(f"Checkerboard pattern detected in frame {frame_number}. Frame saved to: {output}")
             #nextFrame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-            frame_number = frame_number + 5000
+            frame_number = frame_number + 20000
             if frame_number < totalFrames:
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             continue
         else:
-            frame_number = frame_number+ 100 
+            frame_number = frame_number + 5000 
             if frame_number < totalFrames:
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             continue
@@ -68,6 +80,15 @@ def detect_and_save_frame(video_path, output_video_path):
     print("Finished all the frames.")
     # Release the video capture object
     cap.release()
+
+    if len(obj_points) == len(img_points):
+        # Perform camera calibration
+        ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, gray.shape[::-1], None, None)
+        # Save the calibration results
+        np.savez("camera_calibration.npz", mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs)
+
+    
+
 
 
 def main():
