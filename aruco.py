@@ -2,6 +2,7 @@
 
 import cv2
 import numpy as np
+from os import path
 
 # Function to detect ArUco markers in a frame
 def detect_aruco_markers(frame):
@@ -9,10 +10,10 @@ def detect_aruco_markers(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Load the predefined dictionary
-    aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
+    aruco_dict = cv2.aruco.Dictionary(cv2.aruco.DICT_6X6_50,80)
 
     # Initialize the ArUco parameters
-    parameters = cv2.aruco.DetectorParameters_create()
+    parameters = cv2.aruco.DetectorParameters()
 
     # Detect markers in the image
     corners, ids, rejected_img_points = cv2.aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
@@ -23,24 +24,31 @@ def detect_aruco_markers(frame):
     return frame_markers
 
 # Open the video file
-cap = cv2.VideoCapture('test2.mp4')  # Replace 'your_video.mp4' with the path to your video file
-cv2.namedWindow('ArUco Marker Detection', cv2.WINDOW_NORMAL)
+file_path = 'D:\\Science_Projects\\Siberian jay annotated dataset\\Aruco\\output_trimmed_video.mp4'
 
-while cap.isOpened():
-    ret, frame = cap.read()
-    if not ret:
-        break
+if path.exists(file_path):
 
-    # Detect ArUco markers in the frame
-    frame_markers = detect_aruco_markers(frame)
-    
-    # Display the frame with detected markers
-    cv2.imshow('ArUco Marker Detection', frame_markers)
+    cap = cv2.VideoCapture(file_path)  # Replace 'your_video.mp4' with the path to your video file
+    cv2.namedWindow('ArUco Marker Detection', cv2.WINDOW_NORMAL)
 
-    # Break the loop if 'q' key is pressed
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-# Release the video capture object and close all windows
-cap.release()
-cv2.destroyAllWindows()
+        # Detect ArUco markers in the frame
+        frame_markers = detect_aruco_markers(frame)
+        
+        # Display the frame with detected markers
+        cv2.imshow('ArUco Marker Detection', frame_markers)
+
+        # Break the loop if 'q' key is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    # Release the video capture object and close all windows
+    cap.release()
+    cv2.destroyAllWindows()
+
+else:
+    print("File not found.")

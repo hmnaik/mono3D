@@ -17,13 +17,21 @@ def detect_and_save_frame(video_path, output_video_path):
         return
 
     frame_number = 0
+    totalFrames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+    run_code = True
+    jump_factor = 5
 
-    while True:
+    # Arrays to store object points and image points from all images
+    obj_points = []  # 3D points in real world space
+    img_points = []  # 2D points in image plane
+
+    while run_code:
         # Read a frame from the video
         ret, frame = cap.read()
 
         # Break the loop if the video is finished
         if not ret:
+            run_code = False
             break
 
         # Convert the frame to grayscale
@@ -39,18 +47,18 @@ def detect_and_save_frame(video_path, output_video_path):
         objp[:, :2] = np.mgrid[0:checkerboard_size[0], 0:checkerboard_size[1]].T.reshape(-1, 2)
         objp *= square_size_mm
 
-        # Arrays to store object points and image points from all images
-        obj_points = []  # 3D points in real world space
-        img_points = []  # 2D points in image plane
+
 
         # Find the chessboard corners
         ret, corners = cv2.findChessboardCorners(gray, checkerboard_size, None)
-        totalFrames = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        
         
         print(f"Frame number: {frame_number}")
+
+        if len(img_points) > 20: 
+            run_code = False
         
         if ret:
-
             # Store object points 
             obj_points.append(objp)
             
@@ -67,15 +75,18 @@ def detect_and_save_frame(video_path, output_video_path):
             cv2.imwrite(output, frame)
             print(f"Checkerboard pattern detected in frame {frame_number}. Frame saved to: {output}")
             #nextFrame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-            frame_number = frame_number + 20000
+            frame_number = frame_number + jump_factor
             if frame_number < totalFrames:
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             continue
         else:
-            frame_number = frame_number + 5000 
+            frame_number = frame_number + jump_factor 
             if frame_number < totalFrames:
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             continue
+
+    
+ 
             
     print("Finished all the frames.")
     # Release the video capture object
@@ -84,6 +95,11 @@ def detect_and_save_frame(video_path, output_video_path):
     if len(obj_points) == len(img_points):
         # Perform camera calibration
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, gray.shape[::-1], None, None)
+
+        #print calib param 
+        print(f"2D:{rvecs} \n 3D:{tvecs}")
+        print(f"Error:{ret} \n K:{mtx}\n Distortion:{dist}")
+        
         # Save the calibration results
         np.savez("camera_calibration.npz", mtx=mtx, dist=dist, rvecs=rvecs, tvecs=tvecs)
 
@@ -96,10 +112,11 @@ def main():
     parser = argparse.ArgumentParser(description="A simple script with argparse")
 
     # Add optional argument for input file
-    parser.add_argument('--input', '-i', help='Input file path')
+    parser.add_argument('--input', '-i', help='Input file path', default="D:\\Science_projects\\Uganda_Calib\\Test_Calib_1.MP4")
 
     # Add optional argument for output file
-    parser.add_argument('--output', '-o', help='Output file path')
+    parser.add_argument('--output', '-o', help='Output file path', default="D:\\Science_projects\\Uganda_Calib\\Calib")
+
 
     # Parse command-line arguments
     args = parser.parse_args()
@@ -115,13 +132,8 @@ def main():
     else:
         print("Please provide both input and output file paths.")
 
-    # Specify the path to your video file
-    #input_video_path = "D:\\Uganda_Calib\\output_trimmed_video.MP4"
-
     # Call the function to detect and save frames with checkerboard pattern
     detect_and_save_frame(input_video_path, output_video_path)
-
-
 
 if __name__ == "__main__":
     main()

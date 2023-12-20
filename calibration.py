@@ -1,3 +1,5 @@
+# Aruco calibration : Not can be done 
+
 import cv2
 import cv2.aruco as aruco
 import numpy as np
